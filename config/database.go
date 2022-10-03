@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	md "ems-aquadev/models"
 
 	_ "github.com/joho/godotenv/autoload"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type (
@@ -43,6 +44,20 @@ func Database() {
 	fmt.Println("Database Connected")
 }
 
-// func Migrate() {
-// 	DB.AutoMigrate(&entity.User{})
-// }
+func Migrate() {
+	DB.AutoMigrate(
+		&md.User{},
+		&md.UserProfile{},
+		&md.UserAddress{},
+		&md.UserPayment{},
+		&md.Product{},
+		&md.ProductInventory{},
+		&md.ProductCategory{},
+		&md.ProductImage{},
+		&md.CartSession{},
+		&md.CartItem{},
+		&md.Order{},
+		&md.OrderItem{},
+		&md.PaymentDetails{},
+	)
+}
