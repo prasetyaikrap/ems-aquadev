@@ -2,6 +2,10 @@ package main
 
 import (
 	"ems-aquadev/config"
+	"ems-aquadev/handler"
+	"ems-aquadev/repository"
+	"ems-aquadev/route"
+	"ems-aquadev/service"
 	"net/http"
 	"os"
 
@@ -16,7 +20,16 @@ func main() {
 	//echo instances
 	e := echo.New()
 
-	e.GET("/", HomeAPI)
+	//Route Groups
+	g := e.Group("/api/v1")
+
+	//Initialize Handler
+	userRepository := repository.NewUserRepository(config.DB)
+	userService := service.NewUserService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
+
+	route.UserRoutes(g, userHandler)
+	
 
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
 }

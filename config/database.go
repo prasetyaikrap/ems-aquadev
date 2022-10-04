@@ -50,14 +50,6 @@ func Migrate() {
 		&md.UserProfile{},
 		&md.UserAddress{},
 		&md.UserPayment{},
-		&md.Product{},
-		&md.ProductInventory{},
-		&md.ProductCategory{},
-		&md.ProductImage{},
 		&md.CartSession{},
-		&md.CartItem{},
-		&md.Order{},
-		&md.OrderItem{},
-		&md.PaymentDetails{},
 	)
 }
