@@ -41,7 +41,7 @@ type (
 		SKU string `json:"product_sku"`
 		Name string `json:"product_name"`
 	}
-	GetListProductRes struct {
+	GetProductRes struct {
 		ID uint `json:"id"`
 		SKU string `json:"sku"`
 		Name string `json:"name"`

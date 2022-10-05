@@ -41,7 +41,7 @@ func (handler ProductHandler) CreateProduct(c echo.Context) error {
 			Data: productRes,
 		})
 }
-func (handler ProductHandler) FindListProducts(c echo.Context) error {
+func (handler ProductHandler) GetListProducts(c echo.Context) error {
 	priceMin, _ := strconv.Atoi(c.QueryParam("price-min"))
 	priceMax, _ := strconv.Atoi(c.QueryParam("price-max"))
 	categoryid, _ := strconv.Atoi(c.QueryParam("category"))
@@ -52,7 +52,7 @@ func (handler ProductHandler) FindListProducts(c echo.Context) error {
 			uint(priceMax),
 		},
 	}
-	listProducts, err := handler.productService.FindListProducts(queries)
+	listProducts, err := handler.productService.GetListProducts(queries)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
 			Code: http.StatusInternalServerError,
@@ -71,6 +71,29 @@ func (handler ProductHandler) FindListProducts(c echo.Context) error {
 		Code: http.StatusOK,
 		Message: "List Products Found",
 		Data: listProducts,
+	})
+}
+func (handler ProductHandler) GetProduct(c echo.Context) error {
+	productid, _ := strconv.Atoi(c.Param("productid"))
+	product, err := handler.productService.GetProduct(uint(productid))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
+			Code: http.StatusInternalServerError,
+			Message: "Internal Server Error",
+			Data: err.Error(),
+		})
+	}
+	if product.ID == 0 {
+		return c.JSON(http.StatusOK, md.HttpResponse{
+			Code: http.StatusOK,
+			Message: "Success With Empty Data",
+			Data: product,
+		})
+	}
+	return c.JSON(http.StatusOK, md.HttpResponse{
+		Code: http.StatusOK,
+		Message: "Product Found",
+		Data: product,
 	})
 }
 func (handler ProductHandler) UpdateProduct(c echo.Context) error {
@@ -111,7 +134,7 @@ func (handler ProductHandler) RemoveProduct(c echo.Context) error {
 }
 
 //Product Category
-func (handler ProductHandler) FindListCategory(c echo.Context) error {
+func (handler ProductHandler) GetListCategory(c echo.Context) error {
 	listCategory, err := handler.productService.FindListCategory()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
@@ -129,7 +152,7 @@ func (handler ProductHandler) FindListCategory(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, md.HttpResponse{
 		Code: http.StatusOK,
-		Message: "List Products Found",
+		Message: "List Categories Found",
 		Data: listCategory,
 	})
 }

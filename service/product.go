@@ -42,14 +42,14 @@ func (service ProductService) CreateProduct(productReq md.CreateProductReq) (md.
 	}
 	return productRes, nil
 }
-func (service ProductService) FindListProducts(queries md.ProductQueries) ([]md.GetListProductRes, error) {
-	listProducts, err := service.ProductRepository.FindListProducts(queries)
+func (service ProductService) GetListProducts(queries md.ProductQueries) ([]md.GetProductRes, error) {
+	listProducts, err := service.ProductRepository.GetListProducts(queries)
 	if err != nil {
-		return []md.GetListProductRes{}, nil
+		return []md.GetProductRes{}, nil
 	}
-	listProductsRes := []md.GetListProductRes{}
+	listProductsRes := []md.GetProductRes{}
 	for _, product := range listProducts {
-		dataAppend := md.GetListProductRes{
+		dataAppend := md.GetProductRes{
 			ID: product.ID,
 			SKU: product.SKU,
 			Name: product.Name,
@@ -68,6 +68,29 @@ func (service ProductService) FindListProducts(queries md.ProductQueries) ([]md.
 		listProductsRes = append(listProductsRes, dataAppend)
 	}
 	return listProductsRes, nil
+}
+func (service ProductService) GetProduct(productid uint) (md.GetProductRes, error) {
+	product, err := service.ProductRepository.GetProduct(productid)
+	if err != nil {
+		return md.GetProductRes{}, err
+	}
+	productRes := md.GetProductRes{
+		ID: product.ID,
+		SKU: product.SKU,
+		Name: product.Name,
+		Description: product.Description,
+		Price: product.Price,
+		Quantity: product.Quantity,
+		Category: md.GetListProductCategoryRes{
+			CategoryID: product.ProductCategory.ID,
+			CategoryName: product.ProductCategory.Name,
+		},
+		ImageURL: product.ImageURL,
+		CreatedAt: product.CreatedAt,
+		UpdatedAt: product.UpdatedAt,
+		DeletedAt: product.DeletedAt,
+	}
+	return productRes, nil
 }
 func (service ProductService) UpdateProduct(productReq md.UpdateProductReq, productid uint) error {
 	//Update Product

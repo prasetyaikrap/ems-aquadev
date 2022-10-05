@@ -7,10 +7,10 @@ import (
 )
 
 type UserService struct {
-	userRepository repo.IUserRepository
+	userRepository *repo.UserRepository
 }
 
-func NewUserService(userRepository repo.IUserRepository) *UserService {
+func NewUserService(userRepository *repo.UserRepository) *UserService {
 	return &UserService{userRepository}
 }
 
@@ -180,4 +180,39 @@ func (service UserService) SetDeletedAddress(userid string, addressid uint) erro
 	}
 	return nil
 }
+
+//Transaction
+func (service UserService) FindOrCreateCart(userid string) (interface{}, error) {
+	cartSession, err1 := service.userRepository.FindOrCreateCart(userid)
+	if err1 != nil {
+		return md.CartSession{}, err1
+	}
+	cartItems, err2 := service.userRepository.FindCartItems(cartSession.ID)
+	if err2 != nil {
+		return md.CartSession{}, err2
+	}
+	resultCartItems := []md.CartItemRes{}
+	for _, item := range cartItems {
+		cartSession.Total = cartSession.Total + (item.Quantity * item.Product.Price)
+		dataAppend := md.CartItemRes{
+			ID: item.ID,
+			SessionID: item.SessionID,
+			ProductID: item.ProductID,
+			Quantity: item.Quantity,
+			UpdatedAt: item.UpdatedAt,
+			Product: item.Product, 
+		}
+		resultCartItems = append(resultCartItems, dataAppend)
+	}
+
+	cartResult := md.CartSessionRes{
+		ID: cartSession.ID,
+		UserUID: cartSession.UserUID,
+		Total: cartSession.Total,
+		UpdatedAt: cartSession.UpdatedAt,
+		CartItems: resultCartItems,
+	}
+	return cartResult, nil
+}
+func (service UserService) AddItemToCart()
 

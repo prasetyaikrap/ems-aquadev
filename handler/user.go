@@ -230,3 +230,21 @@ func (handler UserHandler) SetDeletedAddress(c echo.Context) error {
 			Message: "Address Set To Deleted",
 		})
 }
+
+//Shopping
+func (handler UserHandler) GetCartSession(c echo.Context) error {
+	userid := c.Param("userid")
+	cartSession, err := handler.userService.FindOrCreateCart(userid)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
+			Code: http.StatusInternalServerError,
+			Message: "Internal Sever Error",
+			Data: err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, md.HttpResponse{
+		Code: http.StatusOK,
+		Message: "Cart Session Found",
+		Data: cartSession,
+	})
+}

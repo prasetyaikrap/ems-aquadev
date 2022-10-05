@@ -6,26 +6,12 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-type (
-	IUserRepository interface{
-		StoreUser(user md.User) (md.User, error)
-		FindUserByUsername(username string) (md.User, error)
-		FindUserProfileByUID(uid string) (md.User, error)
-		FindUserProfileID(uid string)(uint, error)
-		UpdateProfile(profile md.UserProfile) (md.UserProfile, error)
-		StoreUserAddress(userAddress md.UserAddress) (md.UserAddress, error)
-		FindListAddress(uid string, status string) ([]md.UserAddress, error)
-		FindAddressByID(uid string, id uint) (md.UserAddress, error)
-		UpdateAddressByID(address md.UserAddress) (md.UserAddress, error)
-		SetDeletedAddress(uid string, id uint) error
-	}
-
-	UserRepository struct {
+type UserRepository struct {
 		db *gorm.DB
 	}
-)
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db}
@@ -121,3 +107,36 @@ func (repo UserRepository) SetDeletedAddress(userid string, addressid uint) erro
 }
 
 //User Payment Repo
+
+//User Transaction
+func (repo UserRepository) FindOrCreateCart(userid string) (md.CartSession, error) {
+	cartSession := md.CartSession{}
+	if err := repo.db.FirstOrCreate(&cartSession,md.CartSession{UserUID: userid}).Error; err != nil {
+		return md.CartSession{}, err
+	}
+	return cartSession, nil
+}
+func (repo UserRepository) FindCartItems(sessionid uint) ([]md.CartItem, error) {
+	cartItems := []md.CartItem{}
+	if err := repo.db.Preload("Product").Preload(clause.Associations).Where("session_id = ?", sessionid).Find(&cartItems).Error; err != nil {
+		return []md.CartItem{}, err
+	}
+	return cartItems, nil
+}
+func (repo UserRepository) AddItemToCart(cartItem md.CartItem) error {
+	result := repo.db.Model(md.CartItem{}).Where("session_id = ? AND product_id = ?", cartItem.CartSession,cartItem.ProductID).Updates(cartItem)
+	if result.RowsAffected != 0 {
+		return nil
+	}
+	if err := repo.db.Create(&cartItem).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (repo UserRepository) DeleteItemFromCart(cartItemId uint) error {
+	if err := repo.db.Delete(&md.CartItem{}, cartItemId).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (repo UserRepository) CreateOrder()

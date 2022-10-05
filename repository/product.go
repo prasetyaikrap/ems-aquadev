@@ -9,10 +9,10 @@ import (
 )
 
 type (
-	IProductRepository interface{
-		StoreProduct(product md.Product) (md.Product, error)
-		FindListProducts(queries md.ProductQueries)([]md.Product, error)
-	}
+	// IProductRepository interface{
+	// 	StoreProduct(product md.Product) (md.Product, error)
+	// 	FindListProducts(queries md.ProductQueries)([]md.Product, error)
+	// }
 
 	ProductRepository struct {
 		db *gorm.DB
@@ -30,7 +30,7 @@ func (repo ProductRepository) StoreProduct(product md.Product) (md.Product, erro
 	}
 	return product,nil
 }
-func (repo ProductRepository) FindListProducts(queries md.ProductQueries)([]md.Product, error) {
+func (repo ProductRepository) GetListProducts(queries md.ProductQueries)([]md.Product, error) {
 	var (
 		listProducts []md.Product
 		query string
@@ -69,6 +69,13 @@ func (repo ProductRepository) FindListProducts(queries md.ProductQueries)([]md.P
 		}
 	}
 	return listProducts, nil
+}
+func (repo ProductRepository) GetProduct(productid uint) (md.Product, error) {
+	product := md.Product{}
+	if err := repo.db.Where("products.id = ?", productid).Joins("ProductCategory").First(&product).Error; err != nil {
+		return md.Product{}, err
+	}
+	return product, nil
 }
 func (repo ProductRepository) UpdateProduct(product md.Product)(error) {
 	if err := repo.db.Omit("deleted_at").Save(&product).Error; err != nil {
