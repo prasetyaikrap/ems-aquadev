@@ -51,5 +51,7 @@ func Migrate() {
 		&md.UserAddress{},
 		&md.UserPayment{},
 		&md.CartSession{},
+		&md.Product{},
+		&md.ProductCategory{},
 	)
 }

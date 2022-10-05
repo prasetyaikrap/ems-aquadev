@@ -24,11 +24,18 @@ func main() {
 	g := e.Group("/api/v1")
 
 	//Initialize Handler
+	//User
 	userRepository := repository.NewUserRepository(config.DB)
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
+	//Product
+	productRepository := repository.NewProductRepository(config.DB)
+	productService := service.NewProductService(productRepository)
+	productHandler := handler.NewProductHandler(productService)
+
 	route.UserRoutes(g, userHandler)
+	route.ProductRoutes(g, productHandler)
 	
 
 	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))

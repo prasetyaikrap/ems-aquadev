@@ -6,15 +6,6 @@ import (
 	"ems-aquadev/utils"
 )
 
-// type IService interface {
-// 	CreateUser(userReq md.UserRegRequest) (md.UserRegResponse, error)
-// 	LoginUser(userReq md.UserLoginRequest) (md.UserLoginResponse, error)
-// 	GetUserProfile(uid string) (md.GetUserProfile, error)
-// 	UpdateUserProfile(profileReq md.UpdateProfileReq, uid string) (md.UserProfile, error)
-// 	CreateUserAddress(userReq md.UserAddressReq, uid string) (md.UserAddressRes, error)
-// 	GetListAddress(uid string) ([]md.UserAddressRes, error)
-// }
-
 type UserService struct {
 	userRepository repo.IUserRepository
 }

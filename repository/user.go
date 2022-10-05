@@ -110,7 +110,7 @@ func (repo UserRepository) UpdateAddressByID(address md.UserAddress) (md.UserAdd
 }
 func (repo UserRepository) SetDeletedAddress(userid string, addressid uint) error {
 	address := md.UserAddress{}
-	result := repo.db.Debug().Model(&address).Where("user_uid = ? AND id = ?", userid, addressid).Update("deleted_at",time.Now())
+	result := repo.db.Model(&address).Where("user_uid = ? AND id = ?", userid, addressid).Update("deleted_at",time.Now())
 	if result.Error != nil {
 		return result.Error
 	}
