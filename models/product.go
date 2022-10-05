@@ -1,20 +1,23 @@
 package models
 
+import "time"
+
 type (
-	// Product struct {
-	// 	ID uint `json:"id" gorm:"primaryKey;not null;;unique"`
-	// 	SKU string `json:"sku" gorm:"type:varchar(100);not null;default:null"`
-	// 	Name string `json:"name" gorm:"type:varchar(100);not null;default:null"`
-	// 	Description string `json:"description" gorm:"type:text"`
-	// 	Price uint `json:"price" gorm:"not null;default:null"`
-	// 	IsPublished bool `json:"is_published" gorm:"not null;default:null"`
-	// 	CategoryID uint `json:"category_id"`
-	// 	InventoryID uint `json:"inventory_id"`
-	// 	CreatedAt time.Time `json:"created_at"`
-	// 	UpdatedAt time.Time `json:"updated_at"`
-	// 	ProductCategory ProductCategory `gorm:"foreignKey:CategoryID"`
-	// 	ProductInventory ProductInventory `gorm:"foreignKey:InventoryID"`
-	// }
+	Product struct {
+		ID uint `json:"id" gorm:"primaryKey;not null;;unique"`
+		SKU string `json:"sku" gorm:"type:varchar(100);not null;default:null"`
+		Name string `json:"name" gorm:"type:varchar(100);not null;default:null"`
+		Description string `json:"description" gorm:"type:text"`
+		Price uint `json:"price" gorm:"not null;default:null"`
+		IsPublished bool `json:"is_published" gorm:"not null;default:null"`
+		CategoryID uint `json:"category_id"`
+		InventoryID uint `json:"inventory_id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		DeletedAt time.Time `json:"deleted_at" gorm:"default:null"`
+		ProductCategory ProductCategory `gorm:"foreignKey:CategoryID"`
+		ProductInventory ProductInventory `gorm:"foreignKey:InventoryID"`
+	}
 
 	// ProductCategory struct{
 	// 	ID uint `json:"id" gorm:"primaryKey;not null;unique"`

@@ -2,20 +2,24 @@ package repository
 
 import (
 	md "ems-aquadev/models"
+	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type (
 	IUserRepository interface{
-		StoreUserTransaction(uReg md.UserRegRequest) (md.User, error)
+		StoreUser(user md.User) (md.User, error)
 		FindUserByUsername(username string) (md.User, error)
-		FindUserByUID(uid string) (md.User, error)
-		FindProfileByUID(uid string) (md.UserProfile, error)
-		ListAddressByUID(uid string) ([]md.UserAddress, error)
-		ListPaymentByUID(uid string) ([]md.UserPayment, error)
+		FindUserProfileByUID(uid string) (md.User, error)
+		FindUserProfileID(uid string)(uint, error)
+		UpdateProfile(profile md.UserProfile) (md.UserProfile, error)
 		StoreUserAddress(userAddress md.UserAddress) (md.UserAddress, error)
-		StoreUserPayment(userPayment md.UserPayment) (md.UserPayment, error)
+		FindListAddress(uid string, status string) ([]md.UserAddress, error)
+		FindAddressByID(uid string, id uint) (md.UserAddress, error)
+		UpdateAddressByID(address md.UserAddress) (md.UserAddress, error)
+		SetDeletedAddress(uid string, id uint) error
 	}
 
 	UserRepository struct {
@@ -26,90 +30,94 @@ type (
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db}
 }
-
-func (repo UserRepository) StoreUserTransaction(uReg md.UserRegRequest) (md.User, error) {
-	userReg := md.User{
-		Username: uReg.Username,
-		Password: uReg.Password,
-	}
-	userProfile := md.UserProfile{
-		Email: uReg.Email,
-		Fullname: uReg.Fullname,
-	}
-	userCartSession := md.CartSession{}
-	err := repo.db.Transaction(func(tx *gorm.DB) error {
-		//Create New User to table user
-		if err := tx.Debug().Create(&userReg).Error; err != nil {
-			return err
-		}
-		userProfile.UserUID = userReg.UID
-		userCartSession.UserUID = userReg.UID
-		//Create user profile
-		if err := tx.Debug().Create(&userProfile).Error; err != nil {
-			return err
-		}
-		// Create User Cart Session
-		if err := tx.Debug().Create(&userCartSession).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
+//User and Profile Repo
+func (repo UserRepository) StoreUser(user md.User) (md.User, error) {
+	if err := repo.db.Create(&user).Error; err != nil {
 		return md.User{}, err
 	}
-	return userReg, nil
+	return user, nil
 }
-
 func (repo UserRepository) FindUserByUsername(username string) (md.User, error) {
 	user := md.User{}
-	if err := repo.db.Debug().Where("username = ?", username).First(&user).Error; err != nil {
+	if err := repo.db.Where("username = ?", username).First(&user).Error; err != nil {
 		return md.User{}, err
 	}
 	return user, nil
 }
-
-func (repo UserRepository) FindUserByUID(uid string) (md.User, error) {
+func (repo UserRepository) FindUserProfileByUID(uid string) (md.User, error) {
 	user := md.User{}
-	if err := repo.db.Debug().Where("uid = ?", uid).First(&user).Error; err != nil {
+	if err := repo.db.Joins("UserProfile").Where("uid = ?", uid).First(&user).Error; err != nil {
 		return md.User{}, err
 	}
 	return user, nil
 }
-
-func (repo UserRepository) FindProfileByUID(uid string) (md.UserProfile, error) {
-	profile := md.UserProfile{}
-	if err := repo.db.Debug().Where("user_uid = ?", uid).First(&profile).Error; err != nil {
+func (repo UserRepository) FindUserProfileID(uid string)(uint, error) {
+	user := md.User{}
+	if err := repo.db.Select("profile_id").Where("uid = ?", uid).First(&user).Error; err != nil {
+		return 0, err
+	}
+	return user.ProfileID, nil
+}
+func (repo UserRepository) UpdateProfile(profile md.UserProfile) (md.UserProfile, error) {
+	if err := repo.db.Save(&profile).Error; err != nil {
 		return md.UserProfile{}, err
 	}
 	return profile, nil
 }
 
-func (repo UserRepository) ListAddressByUID(uid string) ([]md.UserAddress, error) {
-	addresses := []md.UserAddress{}
-	if err := repo.db.Debug().Where("user_uid = ?", uid).Find(&addresses).Error; err != nil {
-		return []md.UserAddress{}, err
-	}
-	return addresses, nil
-}
-
-func (repo UserRepository) ListPaymentByUID(uid string) ([]md.UserPayment, error) {
-	payments := []md.UserPayment{}
-	if err := repo.db.Debug().Where("user_uid = ?", uid).Find(&payments).Error; err != nil {
-		return []md.UserPayment{}, err
-	}
-	return payments, nil
-}
-
+//User Address Repo
 func (repo UserRepository) StoreUserAddress(userAddress md.UserAddress) (md.UserAddress, error) {
-	if err := repo.db.Debug().Create(&userAddress).Error; err != nil {
+	if err := repo.db.Create(&userAddress).Error; err != nil {
 		return md.UserAddress{}, err
 	}
 	return userAddress, nil
 }
-
-func (repo UserRepository) StoreUserPayment(userPayment md.UserPayment) (md.UserPayment, error) {
-	if err := repo.db.Debug().Create(&userPayment).Error; err != nil {
-		return md.UserPayment{}, err
+func (repo UserRepository) FindListAddress(userid string, status string) ([]md.UserAddress, error) {
+	var (
+		addresses []md.UserAddress
+		query string
+		queryValue []string
+	)
+	
+	switch {
+	case status == "":
+		query = "user_uid = ?"
+		queryValue = []string{userid}
+	case status == "active":
+		query = "user_uid = ? AND deleted_at IS NULL"
+		queryValue = []string{userid}
+	case status == "inactive":
+		query = "user_uid = ? AND deleted_at IS NOT NULL"
+		queryValue = []string{userid}
 	}
-	return userPayment, nil
+	if err := repo.db.Where(query, queryValue).Find(&addresses).Error; err != nil {
+		return []md.UserAddress{}, err
+	}
+	return addresses, nil
 }
+func (repo UserRepository) FindAddressByID(userid string, id uint) (md.UserAddress, error) {
+	address := md.UserAddress{}
+	if err := repo.db.Debug().Where("user_uid = ? AND id = ?",userid,id).First(&address).Error; err != nil {
+		return md.UserAddress{}, err
+	}
+	return address, nil
+}
+func (repo UserRepository) UpdateAddressByID(address md.UserAddress) (md.UserAddress, error) {
+	if err := repo.db.Omit("deleted_at").Save(&address).Error; err != nil {
+		return md.UserAddress{}, err
+	}
+	return address, nil
+}
+func (repo UserRepository) SetDeletedAddress(userid string, addressid uint) error {
+	address := md.UserAddress{}
+	result := repo.db.Debug().Model(&address).Where("user_uid = ? AND id = ?", userid, addressid).Update("deleted_at",time.Now())
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("No rows affected. The record probably does not exist")
+	}
+	return nil
+}
+
+//User Payment Repo
