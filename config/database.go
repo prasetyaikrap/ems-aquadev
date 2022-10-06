@@ -57,5 +57,6 @@ func Migrate() {
 		&md.Order{},
 		&md.OrderItem{},
 		&md.PaymentDetails{},
+		&md.Admin{},
 	)
 }

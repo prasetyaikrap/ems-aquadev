@@ -77,29 +77,21 @@ func (repo UserRepository) StoreUserAddress(userAddress md.UserAddress) (md.User
 func (repo UserRepository) FindListAddress(userid string, status string) ([]md.UserAddress, error) {
 	var (
 		addresses []md.UserAddress
-		query string
-		queryValue []string
 	)
-	
-	switch {
-	case status == "":
-		query = "user_uid = ?"
-		queryValue = []string{userid}
-	case status == "active":
-		query = "user_uid = ? AND deleted_at IS NULL"
-		queryValue = []string{userid}
-	case status == "inactive":
-		query = "user_uid = ? AND deleted_at IS NOT NULL"
-		queryValue = []string{userid}
-	}
-	if err := repo.db.Where(query, queryValue).Find(&addresses).Error; err != nil {
+	if err := repo.db.Where("user_uid = ? AND deleted_at IS NULL", userid).Find(&addresses).Error; err != nil {
 		return []md.UserAddress{}, err
 	}
 	return addresses, nil
 }
-func (repo UserRepository) FindAddressByID(userid string, id uint) (md.UserAddress, error) {
+func (repo UserRepository) FindAddressByID(userid string, id uint, mode string) (md.UserAddress, error) {
+	query := ""
+	if mode == "ALL" {
+		query = "user_uid = ? AND id = ?"
+	} else {
+		query = "user_uid = ? AND id = ? AND deleted_at IS NULL"
+	}
 	address := md.UserAddress{}
-	if err := repo.db.Debug().Where("user_uid = ? AND id = ?",userid,id).First(&address).Error; err != nil {
+	if err := repo.db.Where(query,userid,id).First(&address).Error; err != nil {
 		return md.UserAddress{}, err
 	}
 	return address, nil
@@ -134,9 +126,15 @@ func (repo UserRepository) FindListPayments(userid string) ([]md.UserPayment, er
 	}
 	return payments, nil
 }
-func (repo UserRepository) FindPayment(userid string, paymentid uint) (md.UserPayment, error) {
+func (repo UserRepository) FindPayment(userid string, paymentid uint, mode string) (md.UserPayment, error) {
+	query := ""
+	if mode == "ALL" {
+		query = "user_uid = ? AND id = ?"
+	} else {
+		query = "user_uid = ? AND id = ? AND deleted_at IS NULL"
+	}
 	payment := md.UserPayment{}
-	if err := repo.db.Where("user_uid = ? AND id = ?",userid,paymentid).First(&payment).Error; err != nil {
+	if err := repo.db.Where(query,userid,paymentid).First(&payment).Error; err != nil {
 		return md.UserPayment{}, err
 	}
 	return payment, nil
@@ -175,11 +173,11 @@ func (repo UserRepository) FindCartItems(sessionid uint) ([]md.CartItem, error) 
 	return cartItems, nil
 }
 func (repo UserRepository) AddItemToCart(cartItem md.CartItem) (error) {
-	result := repo.db.Model(md.CartItem{}).Where("session_id = ? AND product_id = ?", &cartItem.SessionID, &cartItem.ProductID).Updates(&cartItem)
-	if result.Error == nil || result.RowsAffected != 0 {
+	result := repo.db.Debug().Model(md.CartItem{}).Where("session_id = ? AND product_id = ?", cartItem.SessionID, cartItem.ProductID).Updates(&cartItem)
+	if result.RowsAffected != 0 {
 		return nil
 	}
-	if err := repo.db.Create(&cartItem).Error; err != nil {
+	if err := repo.db.Debug().Create(&cartItem).Error; err != nil {
 		return err
 	}
 	return nil
@@ -211,7 +209,7 @@ func (repo UserRepository) FindListOrders(userid string) ([]md.Order, error) {
 }
 func (repo UserRepository) FindOrder(userid string, orderid uint) (md.Order, error) {
 	order := md.Order{}
-	if err := repo.db.Preload(clause.Associations).Where("user_uid = ? AND id = ?",userid,orderid).First(&order).Error; err != nil {
+	if err := repo.db.Preload("User").Preload("UserAddress").Preload("PaymentDetails").Where("user_uid = ? AND id = ?",userid,orderid).First(&order).Error; err != nil {
 		return md.Order{}, err
 	}
 	return order, nil
@@ -223,8 +221,8 @@ func (repo UserRepository) FindOrderItems(orderid uint) ([]md.OrderItem, error) 
 	}
 	return orderItems, nil
 }
-func (repo UserRepository) UpdateReceipt(paymentid uint, paymentURL string) error {
-	if err := repo.db.Where("id = ?", paymentid).Updates(&md.PaymentDetails{ReceiptURL: paymentURL}).Error; err != nil {
+func (repo UserRepository) UpdateReceipt(paymentid uint, receiptURL string) error {
+	if err := repo.db.Debug().Where("id = ?", paymentid).Updates(md.PaymentDetails{ReceiptURL: receiptURL}).Error; err != nil {
 		return err
 	}
 	return nil

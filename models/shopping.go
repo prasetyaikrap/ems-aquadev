@@ -28,7 +28,7 @@ type (
 		UserUID string `json:"user_uid" gorm:"type:uuid;not null;default:null"`
 		AddressID uint `json:"address_id" gorm:"not null;default:null"`
 		PaymentID uint `json:"payment_id" gorm:"not null;default:null"`
-		Total uint `json:"total" gorm:"not null;default:null"`
+		Total uint `json:"total" gorm:"not null;default:0"`
 		Status string `json:"status" gorm:"not null;default:null"`
 		CreatedAt time.Time `json:"created_at" gorm:"<-:create"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -51,7 +51,7 @@ type (
 	PaymentDetails struct {
 		ID uint `json:"id" gorm:"primaryKey;not null;unique"`
 		UserPaymentID uint `json:"user_payment_id"`
-		Ammount uint `json:"ammount" gorm:"not null;default:null"`
+		Ammount uint `json:"ammount" gorm:"not null;default:0"`
 		ReceiptURL string `json:"receipt_url" gorm:"type:text"`
 		CreatedAt time.Time `json:"created_at" gorm:"<-:create"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -138,12 +138,15 @@ type (
 	}
 	GetOrderUserPaymentRes struct {
 		ID uint `json:"id"`
+		UserPaymentID uint `json:"user_payment_id"`
+		Ammount uint `json:"ammount"`
+		ReceiptURL string `json:"receipt_url"`
 		PaymentType string `json:"payment_type"`
 		Provider string `json:"provider"`
 		AccountNumber uint `json:"account_number"`
 		Exp time.Time `json:"exp"`
 	}
 	ReceiptURLReq struct {
-		PaymentURL string `json:"payment_url"`
+		ReceiptURL string `json:"receipt_url"`
 	}
 )

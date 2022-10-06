@@ -349,12 +349,12 @@ func (handler UserHandler) GetPayment(c echo.Context) error {
 	case payment.ID == 0:
 		return c.JSON(http.StatusNotFound, md.HTTPResponseWithoutData{
 			Code: http.StatusNotFound,
-			Message: "Address Not Found",
+			Message: "Payment Not Found",
 		})
 	}
 	return c.JSON(http.StatusOK, md.HttpResponse{
 			Code: http.StatusOK,
-			Message: "Address Found",
+			Message: "Payment Found",
 			Data: payment,
 		})
 }
@@ -379,13 +379,13 @@ func (handler UserHandler) UpdatePayment(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, md.HTTPResponseWithoutData{
 		Code: http.StatusOK,
-		Message: "Address Updated Successfully",
+		Message: "Payment Updated Successfully",
 	})
 }
 func (handler UserHandler) SetDeletedPayment(c echo.Context) error {
 	userid := c.Param("userid")
 	paymentid,_ := strconv.Atoi(c.Param("paymentid"))
-	if err := handler.userService.SetDeletedAddress(userid, uint(paymentid)); err != nil {
+	if err := handler.userService.SetDeletedPayment(userid, uint(paymentid)); err != nil {
 		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
 			Code: http.StatusInternalServerError,
 			Message: "Delete Payment Failed",
@@ -551,7 +551,7 @@ func (handler UserHandler) UploadReceipt(c echo.Context) error {
 			Data: err.Error(),
 		})
 	}
-	if err := handler.userService.UploadReceipt(uint(paymentid), req.PaymentURL); err != nil {
+	if err := handler.userService.UploadReceipt(uint(paymentid), req.ReceiptURL); err != nil {
 		return c.JSON(http.StatusInternalServerError, md.HttpResponse{
 			Code: http.StatusInternalServerError,
 			Message: "Internal Server Error",

@@ -176,7 +176,7 @@ func (service UserService) GetListAddress(userid string, status string) ([]md.Us
 	return listAddress, nil
 }
 func (service UserService) GetAddressByID(userid string, addressid uint) (md.UserAddressRes, error) {
-	address, err := service.userRepository.FindAddressByID(userid, addressid)
+	address, err := service.userRepository.FindAddressByID(userid, addressid, "")
 	if err != nil {
 		return md.UserAddressRes{}, err
 	}
@@ -254,7 +254,7 @@ func (service UserService) GetListPayments(userid string) ([]md.GetUserPaymentsR
 	return listPayments, nil
 }
 func (service UserService) GetPayment(userid string, paymentid uint) (md.GetUserPaymentRes, error) {
-	payment, err := service.userRepository.FindPayment(userid, paymentid)
+	payment, err := service.userRepository.FindPayment(userid, paymentid, "")
 	if err != nil {
 		return md.GetUserPaymentRes{}, err
 	}
@@ -448,6 +448,14 @@ func (service UserService) GetOrder(userid string, orderid uint) (md.GetOrderRes
 		}
 		orderItemsRes = append(orderItemsRes, dataAppend)
 	}
+	user, err := service.userRepository.FindUserProfileByUID(order.UserUID)
+	if err != nil {
+		return md.GetOrderRes{}, err
+	}
+	paymentProfile, err := service.userRepository.FindPayment(order.UserUID,order.PaymentDetails.UserPaymentID, "ALL")
+	if err != nil {
+		return md.GetOrderRes{}, err
+	}
 	orderRes := md.GetOrderRes{
 			ID: order.ID,
 			UserUID: order.UserUID,
@@ -458,9 +466,9 @@ func (service UserService) GetOrder(userid string, orderid uint) (md.GetOrderRes
 			CreatedAt: order.CreatedAt,
 			UpdatedAt: order.UpdatedAt,
 			User: md.GetOrderUserRes{
-				Fullname: order.User.UserProfile.Fullname,
-				Email: order.User.UserProfile.Email,
-				Phone: order.User.UserProfile.Phone,
+				Fullname: user.UserProfile.Fullname,
+				Email: user.UserProfile.Email,
+				Phone: user.UserProfile.Phone,
 			},
 			UserAddress: md.GetOrderUserAddressRes{
 				ID: order.UserAddress.ID,
@@ -474,18 +482,21 @@ func (service UserService) GetOrder(userid string, orderid uint) (md.GetOrderRes
 			},
 			PaymentDetails: md.GetOrderUserPaymentRes{
 				ID: order.PaymentDetails.ID,
-				PaymentType: order.PaymentDetails.UserPayment.PaymentType,
-				Provider: order.PaymentDetails.UserPayment.Provider,
-				AccountNumber: order.PaymentDetails.UserPayment.AccountNumber,
-				Exp: order.PaymentDetails.UserPayment.Exp,
+				UserPaymentID: order.PaymentDetails.UserPaymentID,
+				Ammount: order.PaymentDetails.Ammount,
+				ReceiptURL: order.PaymentDetails.ReceiptURL,
+				PaymentType: paymentProfile.PaymentType,
+				Provider: paymentProfile.Provider,
+				AccountNumber: paymentProfile.AccountNumber,
+				Exp: paymentProfile.Exp,
 			},
 			OrderItems: orderItemsRes,
 		}
 
 		return orderRes, nil
 }
-func (service UserService) UploadReceipt(paymentid uint, paymentURL string) error {
-	if err := service.userRepository.UpdateReceipt(paymentid, paymentURL); err != nil {
+func (service UserService) UploadReceipt(paymentid uint, receiptURL string) error {
+	if err := service.userRepository.UpdateReceipt(paymentid, receiptURL); err != nil {
 		return err
 	}
 	return nil

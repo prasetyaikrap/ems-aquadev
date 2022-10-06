@@ -2,8 +2,11 @@ package route
 
 import (
 	h "ems-aquadev/handler"
+	"ems-aquadev/utils"
+	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func ProductRoutes(g *echo.Group, productHandler *h.ProductHandler) {
@@ -14,11 +17,15 @@ func ProductRoutes(g *echo.Group, productHandler *h.ProductHandler) {
 	public.GET("/products/:productid", productHandler.GetProduct)
 
 	//auth
-	admin := g.Group("/auth")
-	admin.POST("/admins/products", productHandler.CreateProduct)
-	admin.GET("/admins/products", productHandler.GetListProducts)
-	admin.GET("/admins/products/:productid", productHandler.GetProduct)
-	admin.PUT("/admins/products/:productid", productHandler.UpdateProduct)
-	admin.DELETE("/admins/products/:productid", productHandler.RemoveProduct)
-	admin.GET("/admins/products/categories",productHandler.GetListCategory)
+	auth := g.Group("/auth")
+	auth.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		Claims: &utils.JwtCustomClaims{},
+		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+	}))
+	auth.POST("/admins/products", productHandler.CreateProduct)
+	auth.GET("/admins/products", productHandler.GetListProducts)
+	auth.GET("/admins/products/:productid", productHandler.GetProduct)
+	auth.PUT("/admins/products/:productid", productHandler.UpdateProduct)
+	auth.DELETE("/admins/products/:productid", productHandler.RemoveProduct)
+	auth.GET("/admins/products/categories",productHandler.GetListCategory)
 }
