@@ -1,32 +1,40 @@
 version: "3.9"
 services:
-  emspostgres:
-    container_name: ems-postgres
-    image: prasetyaip/ems-postgresql:v1
+  database_name:
+    container_name: database_name
+    image: database_image
+    restart: always
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
-      - POSTGRES_USER=prasetyaip
-      - POSTGRES_PASSWORD=setyapsql97
-      - POSTGRES_DB=ems_aquadev
+      - POSTGRES_USER=USER
+      - POSTGRES_PASSWORD=PASSWORD
+      - POSTGRES_DB=DBNAME
     networks:
-      - ems_network
-  emsapiserver:
-    container_name: ems-apiserver
-    image: prasetyaip/ems-aquadev:v2
+      - network-name
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  application_name:
+    container_name: application_name
+    image: application_image
     ports:
-      - 1323:1323
+      - "1323:1323"
     environment:
-      - DB_USER=prasetyaip
-      - DB_PASSWORD=setyapsql97
-      - DB_NAME=ems_aquadev
-      - DB_PORT=5432
-      - DB_TIMEZONE=Asia/Jakarta
-      - JWT_SECRET=5d29bde4e6304033bba3b8174c6677a2
+      - DB_HOST=HOST
+      - DB_USER=USER
+      - DB_PASSWORD=PASSWORD
+      - DB_NAME=DBNAME
+      - DB_PORT=PORT
+      - DB_TIMEZONE=TIMEZONE
     networks:
-      - ems_network
+      - network-name
     depends_on:
-      - emspostgres
+      database_name:
+        condition: service_healthy
 networks:
-  ems_network:
-    name: ems_network
+  network-name:
+    name: network-name

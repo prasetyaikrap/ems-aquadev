@@ -29,13 +29,14 @@ var (
 
 func Database() {
 	dsn := dsn{
+		Host: os.Getenv("DB_HOST"),
 		User: os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		Dbname: os.Getenv("DB_NAME"),
 		Port: os.Getenv("DB_PORT"),
 		Timezone: os.Getenv("DB_TIMEZONE"),
 	}
-	db_url := "user="+dsn.User+" password="+dsn.Password+" dbname="+dsn.Dbname+" port="+dsn.Port+" TimeZone="+dsn.Timezone
+	db_url := "host="+dsn.Host+" user="+dsn.User+" password="+dsn.Password+" dbname="+dsn.Dbname+" port="+dsn.Port+" TimeZone="+dsn.Timezone
 	DB, err = gorm.Open(postgres.Open(db_url), &gorm.Config{})
 	if err != nil {
 		panic(err)
