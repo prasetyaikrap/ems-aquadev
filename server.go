@@ -7,7 +7,6 @@ import (
 	"ems-aquadev/route"
 	"ems-aquadev/service"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
 )
@@ -38,7 +37,7 @@ func main() {
 	route.ProductRoutes(g, productHandler)
 	
 
-	e.Logger.Fatal(e.Start(os.Getenv("SERVER_PORT")))
+	e.Logger.Fatal(e.Start(":1323"))
 }
 
 func HomeAPI(c echo.Context) error{

@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  emspostgres:
+    container_name: ems-postgres
+    image: prasetyaip/ems-postgresql:v1
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=prasetyaip
+      - POSTGRES_PASSWORD=setyapsql97
+      - POSTGRES_DB=ems_aquadev
+    networks:
+      - ems_network
+  emsapiserver:
+    container_name: ems-apiserver
+    image: prasetyaip/ems-aquadev:v2
+    ports:
+      - 1323:1323
+    environment:
+      - DB_USER=prasetyaip
+      - DB_PASSWORD=setyapsql97
+      - DB_NAME=ems_aquadev
+      - DB_PORT=5432
+      - DB_TIMEZONE=Asia/Jakarta
+      - JWT_SECRET=5d29bde4e6304033bba3b8174c6677a2
+    networks:
+      - ems_network
+    depends_on:
+      - emspostgres
+networks:
+  ems_network:
+    name: ems_network
