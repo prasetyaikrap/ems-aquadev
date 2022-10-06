@@ -122,7 +122,25 @@ type (
 		IsDefault bool `json:"is_default"`
 	}
 
-	GetUserPayment struct {
+	//Payment
+	UserPaymentReq struct {
+		UserUID string `json:"user_uid"`
+		PaymentType string `json:"payment_type"`
+		Provider string `json:"provider"`
+		AccountNumber uint `json:"account_number"`
+		Exp time.Time `json:"exp"`
+	}
+	CreateUserPaymentRes struct {
+		ID uint `json:"payment_id"`
+		UserUID string `json:"user_uid"`
+	}
+	GetUserPaymentsRes struct {
+		ID uint `json:"id"`
+		UserUID string `json:"user_uid"`
+		PaymentType string `json:"payment_type"`
+		Provider string `json:"provider"`
+	}
+	GetUserPaymentRes struct {
 		ID uint `json:"id"`
 		UserUID string `json:"user_uid"`
 		PaymentType string `json:"payment_type"`
@@ -130,4 +148,5 @@ type (
 		AccountNumber uint `json:"account_number"`
 		Exp time.Time `json:"exp"`
 	}
+
 )

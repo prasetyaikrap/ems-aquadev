@@ -16,7 +16,23 @@ type UserRepository struct {
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db}
 }
-//User and Profile Repo
+
+//Admin Repository
+func (repo UserRepository) StoreAdmin(admin md.Admin) (md.Admin, error) {
+	if err := repo.db.Create(&admin).Error; err != nil {
+		return md.Admin{}, err
+	}
+	return admin, nil
+}
+func (repo UserRepository) FindAdminByUsername(username string) (md.Admin, error) {
+	admin := md.Admin{}
+	if err := repo.db.Where("username = ?", username).First(&admin).Error; err != nil {
+		return md.Admin{}, err
+	}
+	return admin, nil
+}
+
+//User and Profile Repository
 func (repo UserRepository) StoreUser(user md.User) (md.User, error) {
 	if err := repo.db.Create(&user).Error; err != nil {
 		return md.User{}, err
@@ -51,7 +67,7 @@ func (repo UserRepository) UpdateProfile(profile md.UserProfile) (md.UserProfile
 	return profile, nil
 }
 
-//User Address Repo
+//User Address Repository
 func (repo UserRepository) StoreUserAddress(userAddress md.UserAddress) (md.UserAddress, error) {
 	if err := repo.db.Create(&userAddress).Error; err != nil {
 		return md.UserAddress{}, err
@@ -106,7 +122,42 @@ func (repo UserRepository) SetDeletedAddress(userid string, addressid uint) erro
 	return nil
 }
 
-//User Payment Repo
+//User Payment
+func (repo UserRepository) StoreUserPayment(userData md.UserPayment) (md.UserPayment, error){
+	result := repo.db.Create(&userData)
+	return userData, result.Error
+}
+func (repo UserRepository) FindListPayments(userid string) ([]md.UserPayment, error) {
+	payments := []md.UserPayment{}
+	if err := repo.db.Where("deleted_at IS NULL").Find(&payments).Error; err != nil {
+		return []md.UserPayment{}, err
+	}
+	return payments, nil
+}
+func (repo UserRepository) FindPayment(userid string, paymentid uint) (md.UserPayment, error) {
+	payment := md.UserPayment{}
+	if err := repo.db.Where("user_uid = ? AND id = ?",userid,paymentid).First(&payment).Error; err != nil {
+		return md.UserPayment{}, err
+	}
+	return payment, nil
+}
+func (repo UserRepository) UpdatePayment(address md.UserPayment) error {
+	if err := repo.db.Omit("deleted_at").Save(&address).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (repo UserRepository) SetDeletedPayment(userid string, paymentid uint) error {
+	payment := md.UserPayment{}
+	result := repo.db.Model(&payment).Where("user_uid = ? AND id = ?", userid, paymentid).Update("deleted_at",time.Now())
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("No rows affected. The record probably does not exist")
+	}
+	return nil
+}
 
 //User Transaction
 func (repo UserRepository) FindOrCreateCart(userid string) (md.CartSession, error) {
@@ -123,9 +174,9 @@ func (repo UserRepository) FindCartItems(sessionid uint) ([]md.CartItem, error) 
 	}
 	return cartItems, nil
 }
-func (repo UserRepository) AddItemToCart(cartItem md.CartItem) error {
-	result := repo.db.Model(md.CartItem{}).Where("session_id = ? AND product_id = ?", cartItem.CartSession,cartItem.ProductID).Updates(cartItem)
-	if result.RowsAffected != 0 {
+func (repo UserRepository) AddItemToCart(cartItem md.CartItem) (error) {
+	result := repo.db.Model(md.CartItem{}).Where("session_id = ? AND product_id = ?", &cartItem.SessionID, &cartItem.ProductID).Updates(&cartItem)
+	if result.Error == nil || result.RowsAffected != 0 {
 		return nil
 	}
 	if err := repo.db.Create(&cartItem).Error; err != nil {
@@ -133,10 +184,48 @@ func (repo UserRepository) AddItemToCart(cartItem md.CartItem) error {
 	}
 	return nil
 }
-func (repo UserRepository) DeleteItemFromCart(cartItemId uint) error {
-	if err := repo.db.Delete(&md.CartItem{}, cartItemId).Error; err != nil {
+func (repo UserRepository) DeleteItemFromCart(sessionId uint, cartItemId []uint) error {
+	if err := repo.db.Where("session_id = ? AND id IN (?)",sessionId, cartItemId).Delete(&md.CartItem{}).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func (repo UserRepository) CreateOrder()
+func (repo UserRepository) CreateOrder(order md.Order) (md.Order, error) {
+	if err := repo.db.Create(&order).Error; err != nil {
+		return md.Order{}, err
+	}
+	return order, nil
+}
+func (repo UserRepository) CreateOrderItem(orderItems []md.OrderItem) (error) {
+	if err := repo.db.Create(&orderItems).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func (repo UserRepository) FindListOrders(userid string) ([]md.Order, error) {
+	orders := []md.Order{}
+	if err := repo.db.Preload(clause.Associations).Where("user_uid = ?", userid).Find(&orders).Error; err != nil {
+		return []md.Order{}, err
+	}
+	return orders, nil
+}
+func (repo UserRepository) FindOrder(userid string, orderid uint) (md.Order, error) {
+	order := md.Order{}
+	if err := repo.db.Preload(clause.Associations).Where("user_uid = ? AND id = ?",userid,orderid).First(&order).Error; err != nil {
+		return md.Order{}, err
+	}
+	return order, nil
+}
+func (repo UserRepository) FindOrderItems(orderid uint) ([]md.OrderItem, error) {
+	orderItems := []md.OrderItem{}
+	if err := repo.db.Preload("Product").Preload(clause.Associations).Where("order_id = ?", orderid).Find(&orderItems).Error; err != nil {
+		return []md.OrderItem{}, err
+	}
+	return orderItems, nil
+}
+func (repo UserRepository) UpdateReceipt(paymentid uint, paymentURL string) error {
+	if err := repo.db.Where("id = ?", paymentid).Updates(&md.PaymentDetails{ReceiptURL: paymentURL}).Error; err != nil {
+		return err
+	}
+	return nil
+}

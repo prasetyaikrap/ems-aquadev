@@ -10,14 +10,16 @@ import (
 type JwtCustomClaims struct {
 	UID string `json:"uid"`
 	Name string `json:"name"`
+	Role string `json:"role"`
 	jwt.StandardClaims
 }
 
-func GenerateJWTToken(uid, username string) (string, error) {
+func GenerateJWTToken(uid, username, role string) (string, error) {
 	// Set custom claims
 	claims := &JwtCustomClaims{
 		uid,
 		username,
+		role,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},

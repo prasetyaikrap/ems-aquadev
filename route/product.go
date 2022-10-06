@@ -21,5 +21,4 @@ func ProductRoutes(g *echo.Group, productHandler *h.ProductHandler) {
 	admin.PUT("/admins/products/:productid", productHandler.UpdateProduct)
 	admin.DELETE("/admins/products/:productid", productHandler.RemoveProduct)
 	admin.GET("/admins/products/categories",productHandler.GetListCategory)
-	
 }

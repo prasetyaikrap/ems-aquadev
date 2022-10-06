@@ -54,5 +54,8 @@ func Migrate() {
 		&md.ProductCategory{},
 		&md.CartSession{},
 		&md.CartItem{},
+		&md.Order{},
+		&md.OrderItem{},
+		&md.PaymentDetails{},
 	)
 }
