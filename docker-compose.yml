@@ -7,8 +7,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=USER
-      - POSTGRES_PASSWORD=PASSWORD
+      - POSTGRES_USER=DBUSER
+      - POSTGRES_PASSWORD=DBPASS
       - POSTGRES_DB=DBNAME
     networks:
       - ems_network
@@ -24,13 +24,13 @@ services:
     ports:
       - "1323:1323"
     environment:
-      - DB_HOST=HOST
-      - DB_USER=USER
-      - DB_PASSWORD=PASSWORD
+      - DB_HOST=DBHOST
+      - DB_USER=DBUSER
+      - DB_PASSWORD=DBPASS
       - DB_NAME=DBNAME
       - DB_PORT=PORT
       - DB_TIMEZONE=TIMEZONE
-      - JWT_SECRET=SECRET
+      - JWT_SECRET=5d29bde4e6304033bba3b8174c6677a2
     networks:
       - ems_network
     depends_on:

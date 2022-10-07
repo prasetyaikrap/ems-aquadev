@@ -55,12 +55,12 @@ To run this app, you might to ensure youe machine has these instance installed:
 
 ## Installation
 
-#### Pull repository
+#### Clone repository
 
-Pull the latest version of my repository
+Clone the latest version of my repository
 
 ```sh
-git pull https://github.com/prasetyaikrap/ems-aquadev.git
+git clone https://github.com/prasetyaikrap/ems-aquadev.git
 ```
 
 #### Modify docker-compose
